@@ -9,7 +9,7 @@
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Ggi0");
 MODULE_DESCRIPTION("Modulo RAM - ram_202100229");
-MODULE_VERSION("2.0");
+MODULE_VERSION("3.0");
 
 #define PROC_NAME "ram_202100229" // nombre del archivo en /proc
 
@@ -32,37 +32,41 @@ static int ram_show(struct seq_file *m, void *v)
     */ 
     si_meminfo(&si);
 
-    unsigned long total_ramGB = (si.totalram * 4) / (1024 * 1024);
-    unsigned long free_ramGB = (si.freeram * 4) / (1024 * 1024);
-    unsigned long used_ramGB = total_ramGB - free_ramGB;
+    unsigned long factor = 4 * 100;  // Página de 4KB, multiplicamos por 100 para conservar 2 decimales en enteros
+    unsigned long div = 1024 * 1024;
 
-    unsigned long shared_ramGB = (si.sharedram * 4) / (1024 * 1024);
-    unsigned long buffer_ramGB = (si.bufferram * 4) / (1024 * 1024);
+    unsigned long total_ram = (si.totalram * factor) / (div);
+    unsigned long free_ram = (si.freeram * factor) / (div);
+    unsigned long used_ram = total_ram - free_ram;
 
-    unsigned long total_swapGB = (si.totalswap * 4) / (1024 * 1024);
-    unsigned long free_swapGB = (si.freeswap * 4) / (1024 * 1024);
-    unsigned long used_swapGB = total_swapGB - free_swapGB;
+    unsigned long shared_ram = (si.sharedram * factor) / (div);
+    unsigned long buffer_ram = (si.bufferram * factor) / (div);
+
+    unsigned long total_swap = (si.totalswap * factor) / (div);
+    unsigned long free_swap = (si.freeswap * factor) / (div);
+    unsigned long used_swap = total_swap - free_swap;
 
     // porcentaje de uso de ram y swap
-    unsigned long porcentaje_ram = (used_ramGB * 10000) / total_ramGB;
-    unsigned long porcentaje_swp =  total_swapGB == 0? 0: (used_swapGB * 10000) / total_swapGB; 
+    unsigned long porc_ram = total_ram ? (used_ram * 10000) / total_ram : 0;
+    unsigned long porc_swp = total_swap? (used_swap * 10000) / total_swap : 0; 
     
     // salida:
     seq_printf(m, "{\n");
+
     seq_printf(m, "\t\"ram\": {\n");
-    seq_printf(m, "\t\t\"total\": %lu,\n", total_ramGB);
-    seq_printf(m, "\t\t\"libre\": %lu,\n", free_ramGB);
-    seq_printf(m, "\t\t\"uso\"  : %lu,\n", used_ramGB);
-    seq_printf(m, "\t\t\"porcentaje\": \"%04lu.%02lu%%\",\n", porcentaje_ram / 100, porcentaje_ram % 100);
-    seq_printf(m, "\t\t\"compartida\": %lu,\n", shared_ramGB);
-    seq_printf(m, "\t\t\"buffer\": %lu\n", buffer_ramGB);
+    seq_printf(m, "\t\t\"total\": %lu.%02lu,\n", total_ram / 100, total_ram % 100);
+    seq_printf(m, "\t\t\"libre\": %lu.%02lu,\n", free_ram / 100, free_ram % 100);
+    seq_printf(m, "\t\t\"uso\"  : %lu.%02lu,\n", used_ram / 100, used_ram % 100);
+    seq_printf(m, "\t\t\"porcentaje\": %lu.%02lu,\n", porc_ram / 100, porc_ram % 100);
+    seq_printf(m, "\t\t\"compartida\": %lu.%02lu,\n", shared_ram / 100, shared_ram % 100);
+    seq_printf(m, "\t\t\"buffer\": %lu.%02lu\n", buffer_ram / 100, buffer_ram % 100);
     seq_printf(m, "\t},\n");
 
     seq_printf(m, "\t\"swap\": {\n");
-    seq_printf(m, "\t\t\"total\": %lu, \n", total_swapGB);
-    seq_printf(m, "\t\t\"libre\": %lu, \n", free_swapGB);
-    seq_printf(m, "\t\t\"uso\"  : %lu, \n", used_swapGB);
-    seq_printf(m, "\t\t\"porcentaje\": \"%04lu.%02lu%%\"\n", porcentaje_swp / 100, porcentaje_swp % 100);
+    seq_printf(m, "\t\t\"total\": %lu.%02lu,\n", total_swap / 100, total_swap % 100);
+    seq_printf(m, "\t\t\"libre\": %lu.%02lu,\n", free_swap / 100, free_swap % 100);
+    seq_printf(m, "\t\t\"uso\"  : %lu.%02lu,\n", used_swap / 100, used_swap % 100);
+    seq_printf(m, "\t\t\"porcentaje\": %lu.%02lu\n", porc_swp / 100, porc_swp % 100);
     seq_printf(m, "\t}\n");
 
     seq_printf(m, "}\n");
