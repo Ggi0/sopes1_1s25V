@@ -18,7 +18,7 @@
 MODULE_LICENSE("GPL");  // la licencia gpl se requiere para acceder a simbolos del kernel
 MODULE_AUTHOR("Gio");   
 MODULE_DESCRIPTION("Module CPU - cpu_202100229");
-MODULE_VERSION("1.0");
+MODULE_VERSION("2.0");
 
 #define PROC_NAME "cpu_202100229" // nombre del modulo
 
@@ -165,31 +165,31 @@ static int cpu_show(struct seq_file *m, void *v)
     seq_printf(m, "{\n");
     
     // Load average (indicador clave de estrés del sistema)
-    seq_printf(m, "\t\"loadavg\": {\n");
+    seq_printf(m, "\t\"carga_avg\": {\n");
     seq_printf(m, "\t\t\"1min\": %lu.%02lu,\n", load_avg1 / 100, load_avg1 % 100);
     seq_printf(m, "\t\t\"5min\": %lu.%02lu,\n", load_avg5 / 100, load_avg5 % 100);
     seq_printf(m, "\t\t\"15min\": %lu.%02lu\n", load_avg15 / 100, load_avg15 % 100);
     seq_printf(m, "\t},\n");
     
     // Frecuencia actual del CPU (varía con la carga)
-    seq_printf(m, "\t\"frequency\": {\n");
+    seq_printf(m, "\t\"frecuencia\": {\n");
     if (cpu_freq > 0) {
-        seq_printf(m, "\t\t\"current_mhz\": %u.%03u\n", cpu_freq / 1000, cpu_freq % 1000);
+        seq_printf(m, "\t\t\"actual_mhz\": %u.%03u\n", cpu_freq / 1000, cpu_freq % 1000);
     } else {
-        seq_printf(m, "\t\t\"current_mhz\": \"unavailable\"\n");
+        seq_printf(m, "\t\t\"actual_mhz\": \"indisponible\"\n");
     }
     seq_printf(m, "\t},\n");
 
     // Porcentaje de uso del CPU
-    seq_printf(m, "\t\"usage\": {\n");
-    seq_printf(m, "\t\t\"cpu_percent\": %lu.%02lu,\n", cpu_usage_percent / 100, cpu_usage_percent % 100);
+    seq_printf(m, "\t\"uso\": {\n");
+    seq_printf(m, "\t\t\"cpu_used\": %lu.%02lu,\n", cpu_usage_percent / 100, cpu_usage_percent % 100);
     seq_printf(m, "\t\t\"cpu_free\": %lu.%02lu\n", cpu_free_percent / 100, cpu_free_percent % 100);
     seq_printf(m, "\t},\n");
     
     // Información de procesos (indica actividad del sistema)
-    seq_printf(m, "\t\"processes\": {\n");
-    seq_printf(m, "\t\t\"running\": %lu,\n", proc_running);
-    seq_printf(m, "\t\t\"blocked\": %lu\n", proc_blocked);
+    seq_printf(m, "\t\"procesos\": {\n");
+    seq_printf(m, "\t\t\"ejecutando\": %lu,\n", proc_running);
+    seq_printf(m, "\t\t\"bloqueados\": %lu\n", proc_blocked);
     seq_printf(m, "\t}\n");
     
     seq_printf(m, "}\n");
