@@ -6,7 +6,9 @@ package services
 
 import (
 	"collector/models"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"sync"
 	"time"
@@ -104,4 +106,74 @@ func (ms *MonitorService) GetSystemMetrics() (*models.SystemMetrics, error) {
 
 	log.Println("Daos del sistema recolectadas exitosamente")
 	return metrics, nil
+}
+
+/*
+lee el archivo de informacion de ram usando una gorourine
+
+wg  -> waitgroup para sincornizacion
+ramChannel --> canal paa enviar los datos de la ram
+errorChannel ---> canal para enviar errores
+*/
+func (ms *MonitorService) readRAM(wg *sync.WaitGroup, ramChannel chan<- models.RAMdata, errorChannel chan<- error) {
+	defer wg.Done() // al terminar la funcion, decrementamos el contador del waitgroup
+
+	log.Println("Leyendo datos de la RAM desde: %s", ms.ramFilePath)
+
+	// leer todo el contenido del archivo
+	data, err := ioutil.ReadFile(ms.ramFilePath)
+	if err != nil {
+		errMsg := fmt.Sprintf("error al leer archivo ram %s: %v", ms.ramFilePath, err)
+		log.Printf("%s", errMsg)
+		errorChannel <- fmt.Errorf(errMsg)
+		return
+	}
+
+	// parseamos el JSON a nuestra estructura RAMdata
+	var ramRespuesta models.RAMdata
+	if err := json.Unmarshal(data, &ramRespuesta); err != nil {
+		errorMsg := fmt.Sprintf("error al parsear a JSON de RAM: %v", err)
+		log.Printf("%s", errorMsg)
+		errorChannel <- fmt.Errorf(errorMsg)
+		return
+	}
+
+	// enviamos los datos por el canal
+	ramChannel <- ramRespuesta
+	log.Printf("Datos de RAM enviados al canal")
+
+	//log.Printf("Datos de RAM enviados al canal - Uso: %.2f%%, Total: %.2f GB", ramData.RAM.Porcentaje, ramData.RAM.Total)
+}
+
+/*
+lee el archivo de información de CPU usando una goroutine
+*/
+func (ms *MonitorService) readCPU(wg *sync.WaitGroup, cpuChannel chan<- models.CPUdata, errorChannel chan<- error) {
+	defer wg.Done() // al terminar la funcion decrementamos el contador del waitgroup
+
+	log.Printf("Leyendo datos de CPU desde: %s", ms.cpuFilePath)
+
+	// Leemos todo el contenido del archivo
+	data, err := ioutil.ReadFile(ms.cpuFilePath)
+	if err != nil {
+		errorMsg := fmt.Sprintf("error al leer archivo de CPU %s: %v", ms.cpuFilePath, err)
+		log.Printf("%s", errorMsg)
+		errorChannel <- fmt.Errorf(errorMsg)
+		return
+	}
+
+	// Parseamos el JSON a nuestra estructura CPUData
+	var cpuData models.CPUdata
+	if err := json.Unmarshal(data, &cpuData); err != nil {
+		errorMsg := fmt.Sprintf("error al parsear JSON de CPU: %v", err)
+		log.Printf("%s", errorMsg)
+		errorChannel <- fmt.Errorf(errorMsg)
+		return
+	}
+
+	// Enviamos los datos por el canal
+	cpuChannel <- cpuData
+	log.Printf("Datos del CPU enviados al canal")
+	//log.Printf(" Datos de CPU enviados al canal - Uso: %.2f%%, Frecuencia: %.0f MHz", cpuData.Uso.CPUUsed, cpuData.Frecuencia.ActualMhz)
+
 }
