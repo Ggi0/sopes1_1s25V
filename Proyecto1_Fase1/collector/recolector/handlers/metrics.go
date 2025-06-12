@@ -2,8 +2,7 @@ package handlers
 
 /*
 	handlers/metrics.go - Contiene los manejadores HTTP (handlers)
-	Los handlers son funciones que se ejecutan cuando llega una petición HTTP
-	Son como los controladores en MVC, manejan las rutas de la API
+	----> funciones que se ejecutan cuando llega una petición HTTP
 */
 
 import (
@@ -31,7 +30,6 @@ func NewMetricsHandler(monitorService *services.MonitorService) *MetricsHandler 
 GetMetrics maneja las peticiones GET a /metrics
 Esta función se ejecuta cada vez que la API de NodeJS hace una petición
 
-Parámetros:
 - c: Context de Gin que contiene información de la petición HTTP
 */
 func (h *MetricsHandler) GetMetrics(c *gin.Context) {
@@ -62,7 +60,8 @@ func (h *MetricsHandler) GetMetrics(c *gin.Context) {
 /*
 GetHealth maneja las peticiones GET a /health
 Este endpoint se usa para verificar que el servicio esté funcionando
-Es útil para Docker health checks y monitoreo
+
+	todo: --> para Docker health checks y monitoreo
 */
 func (h *MetricsHandler) GetHealth(c *gin.Context) {
 	healthResponse := gin.H{
