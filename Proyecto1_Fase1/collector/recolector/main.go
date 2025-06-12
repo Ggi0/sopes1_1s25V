@@ -21,9 +21,8 @@ func main() {
 package main
 
 /*
-	main.go - Punto de entrada principal de la aplicación
+	main.go - Punto de entrada principal
 
-	Este archivo:
 	1. Configura el servidor HTTP con Gin
 	2. Inicializa los servicios y handlers
 	3. Define las rutas de la API
@@ -43,10 +42,10 @@ import (
 )
 
 func main() {
-	// Banner de inicio para identificar fácilmente el servicio en los logs
+	// inicio para identificar el servicio en los logs
 	log.Println(" Iniciando Recolector de Métricas del Sistema")
 	log.Println(" Servicio de monitoreo con Goroutines y Canales")
-	//log.Println("=" * 50)
+	log.Println("=================================================")
 
 	// Configuramos las rutas de los archivos que vamos a leer
 	// En desarrollo: /proc/ram_202100229 y /proc/cpu_202100229
@@ -65,7 +64,7 @@ func main() {
 		log.Fatalf(" Error: El archivo de CPU no existe: %s", cpuFilePath)
 	}
 
-	log.Println(" Archivos de métricas encontrados")
+	log.Println("---> Archivos de métricas encontrados")
 
 	// Inicializamos el servicio de monitoreo
 	// Este servicio contiene toda la lógica para leer los archivos con goroutines
@@ -75,8 +74,7 @@ func main() {
 	// El handler maneja las peticiones HTTP y usa el servicio
 	metricsHandler := handlers.NewMetricsHandler(monitorService)
 
-	// Configuramos Gin en modo release para producción
-	// En desarrollo puedes comentar esta línea para ver más detalles
+	// Configuramos Gin en modo release
 	gin.SetMode(gin.ReleaseMode)
 
 	// Creamos el router de Gin
@@ -95,7 +93,7 @@ func main() {
 	// Middleware para logging de peticiones
 	// Esto nos ayuda a ver qué peticiones están llegando
 	router.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
-		return fmt.Sprintf("🌐 %s - %s %s %d %s\n",
+		return fmt.Sprintf("%s - %s %s %d %s\n",
 			param.TimeStamp.Format("2006/01/02 - 15:04:05"),
 			param.Method,
 			param.Path,
@@ -152,7 +150,7 @@ func main() {
 }
 
 // getEnvOrDefault obtiene una variable de entorno o retorna un valor por defecto
-// Es útil para configurar la aplicación sin hardcodear valores
+// Es útil para configurar la aplicacion
 func getEnvOrDefault(key, defaultValue string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
