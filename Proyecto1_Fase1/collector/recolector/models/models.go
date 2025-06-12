@@ -11,7 +11,7 @@ package models
 // conbina la info de cpu y ram
 type SystemMetrics struct {
 	TimeStamp string  `json:"timeStamp"` // fecha y hora de la medicion
-	RAM       RAMdata `json:"ram"`       // infomacion de la memoria (ram model)
+	RAM       RAMinfo `json:"ram"`       // infomacion de la memoria (ram model)
 	CPU       CPUdata `json:"cpu"`       // imformacion del cpu (cpu model)
 	Status    string  `json:"status"`    // EStado de la recoleecion (success o error)
 	Message   string  `json:"message"`   // mensaje
