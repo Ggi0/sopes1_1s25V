@@ -1,9 +1,11 @@
 const express = require('express');
+const cors = require('cors')
 const app = express();
 const PORT = 3000;
 
 const axios = require('axios')
 
+app.use(cors());
 app.use(express.json()); // middelware para parsear a json
 
 app.get('/', (req, res) => {
@@ -47,6 +49,7 @@ app.get('/recolector/health', async(req, res) => {
 });
 
 
+// TODO: conectar a la base de datos.
 
 app.listen(PORT, () => {
     console.log(`API escuchando en http://localhost:${PORT}`);
