@@ -16,7 +16,43 @@ endopoints del recolector:
 /metric:
 
 ```
-{"timeStamp":"2025-06-12T17:43:08-06:00","ram":{"total":7.66,"libre":0.82,"uso":6.84,"porcentaje":89.29,"compartida":0.15,"buffer":0.03},"cpu":{"carga_avg":{"1min":1.07,"5min":1.16,"15min":1.12},"frecuencia":{"actual_mhz":1200},"uso":{"cpu_used":8.51,"cpu_free":91.49},"porcesos":{"ejecutando":0,"bloqueados":0}},"status":"success","message":"Lectura de datos correcta"}
+{
+    "timeStamp":"2025-06-12T17:43:08-06:00",
+    "ram":
+        {
+            "total":7.66,
+            "libre":0.82,
+            "uso":6.84,
+            "porcentaje":89.29,
+            "compartida":0.15,
+            "buffer":0.03
+        },
+    "cpu":
+        {
+            "carga_avg":
+                {
+                    "1min":1.07,
+                    "5min":1.16,
+                    "15min":1.12
+                },
+            "frecuencia":
+                {
+                    "actual_mhz":1200
+                },
+            "uso":
+                {
+                    "cpu_used":8.51,
+                    "cpu_free":91.49
+                },
+            "porcesos":
+                {
+                    "ejecutando":0,
+                    "bloqueados":0
+                }
+        },
+    "status":"success",
+    "message":"Lectura de datos correcta"
+}
 ```
 
 /info:
