@@ -20,7 +20,7 @@ export default function RamChart() {
         // Llamada inicial
         fetchData();
          // intervalo cada 20 seg (20000 ms)
-         const intervalo = setInterval(fetchData, 20000);
+         const intervalo = setInterval(fetchData, 3000);
         
          // limpieza del intervalo al desmontar compotnete
          return () => clearInterval(intervalo);
