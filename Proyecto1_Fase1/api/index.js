@@ -41,7 +41,7 @@ async function fetchMetricas() {
         currentMetrics = {
             ram: response.data.ram,
             cpu: response.data.cpu,
-            lastUpdate: new Data().toISOStrign(),
+            lastUpdate: new Date().toISOString(),
             isHealthy: true
         };
 
@@ -70,30 +70,64 @@ function actualizacion() {
 
 
 // =======================================================================
-//      RUTAS DE LA API
-// =============================================
+//                      RUTAS DE LA API
+// =======================================================================
 
-
+// ruta principal
 app.get('/', (req, res) => {
-    res.send('API - nodeJS viva')
+    res.json({
+        message: 'API - llamando al servidor de metricas',
+        status: 'levantado',
+        lastUpdate: currentMetrics.lastUpdate,
+        updateInterval: `${UPDATE_INTERVALO/1000} seg`
+    });
 });
+
+// ruta para obtener metricas 
+app.get('/metrics', (req, res) => {
+    if (!currentMetrics.ram || !currentMetrics.cpu) {
+        return res.status(503).json({
+            error: 'Las metricas no disponibles en este momento',
+            message: 'El sistema esta iniciando ...'
+        });
+    }
+
+    res.json({
+        ram: currentMetrics.ram,
+        cpu: currentMetrics.cpu,
+        lastUpdate: currentMetrics.lastUpdate,
+        isHealthy: currentMetrics.isHealthy,
+        timestamp: new Date().toISOString()
+    });
+});
+
+
+// ==========================================================
+//          compartabilidad al las rutas originales 
+// ==========================================================
 
 app.get('/recolector', async(req, res) => {
     try {
         const response = await axios.get('http://localhost:8080');
         res.json(response.data);
     } catch (error) {
-        res.status(500).send('Error al tratar de comunicarse con el RECOLECTOR')
+        res.status(500).json({
+            error: 'Error al tratar de comunicarse con el RECOLECTOR',
+            message: error.message
+        });
     }
 });
 
 app.get('/recolector/metrics', async(req, res) => {
-    try {
+    /*try {
         const response = await axios.get('http://localhost:8080/metrics');
         res.json(response.data);
     } catch (error) {
         res.status(500).send('Error al tratar de obtener las metricas con el RECOLECTOR')
-    }
+    }*/
+
+    // redirigir a la nueva ruta optimizada
+    res.redirect('/metrics')
 });
 
 app.get('/recolector/info', async(req, res) => {
@@ -101,7 +135,11 @@ app.get('/recolector/info', async(req, res) => {
         const response = await axios.get('http://localhost:8080/info');
         res.json(response.data);
     } catch (error) {
-        res.status(500).send('ERROR al tratar de obtener la info del recolector')
+        res.status(500).json({
+            error: 'Error al tratar de obtener info con el RECOLECTOR',
+            message: error.message
+        });
+        // res.status(500).send('ERROR al tratar de obtener la info del recolector')
     }
 });
 
@@ -110,7 +148,11 @@ app.get('/recolector/health', async(req, res) => {
         const response = await axios.get('http://localhost:8080/health');
         res.json(response.data);
     } catch (error) {
-        res.status(500).send('ERROR al tratar de obtener el estado del recolector')
+        //res.status(500).send('ERROR al tratar de obtener el estado del recolector')
+        res.status(500).json({
+            error: 'Error al tratar de obtener estado del recolector',
+            message: error.message
+        });
     }
 });
 
@@ -119,5 +161,8 @@ app.get('/recolector/health', async(req, res) => {
 
 app.listen(PORT, () => {
     console.log(`API escuchando en http://localhost:${PORT}`);
+
+    // iniciar las llamadas
+    actualizacion();
 });
 
