@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors')
 
+const { Pool } = require('pg'); // importar postgreSQL client
+
 const app = express();
 const PORT = 3000;
 
@@ -8,6 +10,73 @@ const axios = require('axios')
 
 app.use(cors());
 app.use(express.json()); // middelware para parsear a json
+
+
+// Configuración de la conexión a PostgreSQL
+const pool = new Pool({
+    user: 'postgres',
+    host: 'localhost',
+    database: 'so1p1',
+    password: 'gio21',
+    port: 5432,
+});
+
+// ==================================================================
+//      para la base de datos 
+// Función para insertar datos en la base de datos
+async function insertDataDB(data) {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        
+        // Insertar datos de RAM
+        if (data.ram) {
+            const ramQuery = `
+                INSERT INTO ram_data (total_gb, libre_gb, uso_gb, porcentaje, compartida_gb, buffer_gb, timestamp_og)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
+            `;
+            await client.query(ramQuery, [
+                data.ram.total,
+                data.ram.libre,
+                data.ram.uso,
+                data.ram.porcentaje,
+                data.ram.compartida,
+                data.ram.buffer,
+                data.timeStamp
+            ]);
+        }
+        
+        // Insertar datos de CPU
+        if (data.cpu) {
+            const cpuQuery = `
+                INSERT INTO cpu_data (carga_1min, carga_5min, carga_15min, frecuencia_mhz, 
+                                    cpu_used, cpu_free, procesos_ejecutando, procesos_bloqueados, timestamp_og)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            `;
+            await client.query(cpuQuery, [
+                data.cpu.carga_avg['1min'],
+                data.cpu.carga_avg['5min'],
+                data.cpu.carga_avg['15min'],
+                data.cpu.frecuencia.actual_mhz,
+                data.cpu.uso.cpu_used,
+                data.cpu.uso.cpu_free,
+                data.cpu.porcesos.ejecutando,
+                data.cpu.porcesos.bloqueados,
+                data.timeStamp
+            ]);
+        }
+        
+        await client.query('COMMIT');
+        console.log(' ===>> Datos guardados en la base de datos correctamente');
+        
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Error al guardar datos en la base de datos:', error);
+    } finally {
+        client.release();
+    }
+}
+// ==================================================================
 
 
 // estado global para almacenar las metricas mas recientes
@@ -36,6 +105,10 @@ async function fetchMetricas() {
         const response = await axios.get('http://localhost:8080/metrics', {
             timeout: 3000 // timeout 3 seg
         });
+
+
+        // ! IMPORTANTE meter la info a la funcion que registra en la base de datos
+        await insertDataDB(response.data);
 
         // actualizar el estado global
         currentMetrics = {
@@ -157,10 +230,19 @@ app.get('/recolector/health', async(req, res) => {
 });
 
 
-// TODO: conectar a la base de datos.
+// TODO: posibles rutas para ver datos historicos .
 
 app.listen(PORT, () => {
     console.log(`API escuchando en http://localhost:${PORT}`);
+
+        // Probar conexión a la base de datos
+    pool.query('SELECT NOW()', (err, res) => {
+        if (err) {
+            console.error('Error conectando a PostgreSQL:', err);
+        } else {
+            console.log('Conexión a PostgreSQL exitosa:', res.rows[0]);
+        }
+    });
 
     // iniciar las llamadas
     actualizacion();
