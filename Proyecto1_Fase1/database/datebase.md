@@ -30,7 +30,6 @@ so1p1=# CREATE TABLE ram_data (
 -- Crear tabla para datos de CPU con todas las métricas
 CREATE TABLE cpu_data (
     id SERIAL PRIMARY KEY,
-    timestamp TIMESTAMPTZ DEFAULT NOW(),
     carga_1min REAL,
     carga_5min REAL,
     carga_15min REAL,
@@ -85,8 +84,8 @@ npm install pg
 const pool = new Pool({
     user: 'postgres',
     host: 'localhost',
-    database: 'sopes1p1',
-    password: '', // Cambia esto por tu contraseña de PostgreSQL
+    database: 'so1p1',
+    password: 'gio21', // Cambia esto por tu contraseña de PostgreSQL
     port: 5432,
 });
 
@@ -94,3 +93,32 @@ const pool = new Pool({
 
 # ver los registros de una tabla
 SELECT * FROM ram_data;
+
+
+
+# dentro de docker para ver informacion
+
+- si se quiere levantar solo la base de datos:
+
+`sudo docker compose up -d db`
+
+- ver si existe volumen
+`docker volume ls`
+
+- consultar los datos 
+`docker exec -it db_sopes1p1 psql -U postgres -d so1p1`
+
+- acceder a las tablas:
+```
+SELECT * FROM ram_data;
+SELECT * FROM cpu_data;
+```
+
+- para bajar el contenedor:
+`docker-compose down`
+
+- parar y eliminar volumenes 
+`docker compose down -v`
+
+- reconstruir imagenes
+`docker compose up -d --build`
