@@ -1,0 +1,166 @@
+# version del docker compose
+version: '3.8'
+
+# def de todos los servios utilizados 
+services:
+
+# ========================BASE DE DATOS========================
+  db:
+    image: postgres:15-alpine
+    container_name: db_sopes1p1
+
+    # variables de entrorno para configurara postgre sql
+    environment:
+      POSTGRES_DB: so1p1
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: gio21
+      # var que permite conexiones sin restriccion
+      POSTGRES_HOST_AUTHO_METHOD: trust
+
+    #mapero de puerto
+    ports:
+      - "5432:5432"
+
+    #volumnes para persistencia de datos e init
+    volumes:
+      - postgres_data:/var/lib/postgresql/postgres_data
+      # script de inicializacion de la base de datos
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+    #conectar a la red 
+    networks:
+      - monitoring_network
+
+    # Verificar que el servicio esté saludable
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d so1p1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+# ========================BACK - COLLECTOR========================
+  collector:
+    # construir desde el dockerfile loca
+    build:
+      context: ./collector/recolector
+      dockerfile: dockerfile
+
+    container_name: monitoring_collector
+
+    #mapeo de puertos
+    ports:
+      - "8080:8080"
+
+    # volumen para los modulos
+    volumes:
+      - /proc:/proc:recolector
+    
+    #conectarse a la red
+    networks:
+      - monitoring_network
+
+    # espera que la base de datos este lista
+    depends_on:
+      db:
+        condition: service_healthy
+
+    # Verificar que el servicio esté funcionando
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+# ========================API - NODEJS========================
+  api:
+    #contruir desde el dockerfile
+    build: 
+      context: ./api
+      dockerfile: dockerfile
+
+    container_name: monitoring_api
+
+    #mapeo de puertos
+    ports:
+      - "3000:3000"
+
+    #variables de entrono para fongi conexiones
+    environment:
+      # Configuración de base de datos
+      DB_HOST: db              # Nombre del servicio de base de datos
+      DB_PORT: 5432
+      DB_NAME: so1p1
+      DB_USER: postgres
+      DB_PASSWORD: gio21
+
+      # config del back
+      COLLECTOR_URL: http://collector:8080 # nombre del servicio collector
+
+    # conectarse a la red
+    networks:
+      - monitoring_network
+
+    # Dependencias: esperar a que estén funcionando
+    depends_on:
+      db:
+        condition: service_healthy
+      collector:
+        condition: service_healthy
+    
+    # Verificar que la API esté respondiendo
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+# ========================FRONTEND - REACT========================
+  frontend:
+    #cosntruir a partir del dockerfile
+    build: 
+      context: ./frontend/dashboard
+      dockerfile: dockerfile
+
+    container_name: monitoring_front
+
+    #mapeo de puertos
+    ports:
+      - "5173:5173"
+
+        # Variables de entorno para configurar la API
+    environment:
+      # URL de la API desde el navegador (usa localhost porque el navegador accede desde fuera del contenedor)
+      VITE_API_URL: http://localhost:3000
+    
+    # Conectar a la red
+    networks:
+      - monitoring_network
+    
+    # Esperar a que la API esté lista
+    depends_on:
+      api:
+        condition: service_healthy
+    
+    # Verificar que el frontend esté respondiendo
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5173/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+# ========================FRONTEND - REACT========================
+networks:
+  monitoring_network:
+    # Usar el driver bridge para comunicación entre contenedores
+    driver: bridge
+    # Configuración adicional de la red
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# Definición de volúmenes para persistencia
+volumes:
+  # Volumen para datos de PostgreSQL
+  postgres_data:
+    # Docker manejará automáticamente este volumen
