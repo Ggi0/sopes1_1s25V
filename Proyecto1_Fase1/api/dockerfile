@@ -1,0 +1,26 @@
+# node js como imagen base
+# 22 ya que con la version v22.16.0 hice la api
+FROM node:22-alpine 
+
+# para el directorio de trabajo
+WORKDIR /api
+
+#copiamos los .json que tienen la configuracion de dependencias
+COPY package*.json ./
+
+# instalamos las dependencias
+RUN npm install
+
+# Copiamos el resto del codigo
+COPY . .
+
+# exponemos el puerto
+EXPOSE 3000
+
+# comando para ejecutar la api
+CMD [ "node", "index.js" ]
+
+
+
+
+
