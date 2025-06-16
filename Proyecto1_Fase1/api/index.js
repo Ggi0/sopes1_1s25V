@@ -14,12 +14,17 @@ app.use(express.json()); // middelware para parsear a json
 
 // Configuración de la conexión a PostgreSQL
 const pool = new Pool({
-    user: 'postgres',
-    host: 'localhost',
-    database: 'so1p1',
-    password: 'gio21',
-    port: 5432,
+    user: process.env.DB_USER || 'postgres',
+    host: process.env.DB_HOST || 'localhost',
+    database: process.env.DB_NAME ||'so1p1',
+    password: process.env.DB_PASSWORD ||'gio21',
+    port: process.env.DB_PORT || 5432, // el db_port se define en el .yml
 });
+
+
+// ! importante:  URL del collector usando variables de entorno
+const COLLECTOR_URL = process.env.COLLECTOR_URL || 'http://localhost:8080';
+
 
 // ==================================================================
 //      para la base de datos 
@@ -102,7 +107,7 @@ async function fetchMetricas() {
         console.log("Consultando informacion del recolector");
 
         // hacer la peticion
-        const response = await axios.get('http://localhost:8080/metrics', {
+        const response = await axios.get(`${COLLECTOR_URL}/metrics`, { // modificar la url para que escuche
             timeout: 3000 // timeout 3 seg
         });
 
@@ -181,7 +186,7 @@ app.get('/metrics', (req, res) => {
 
 app.get('/recolector', async(req, res) => {
     try {
-        const response = await axios.get('http://localhost:8080');
+        const response = await axios.get(COLLECTOR_URL);
         res.json(response.data);
     } catch (error) {
         res.status(500).json({
@@ -205,7 +210,7 @@ app.get('/recolector/metrics', async(req, res) => {
 
 app.get('/recolector/info', async(req, res) => {
     try{
-        const response = await axios.get('http://localhost:8080/info');
+        const response = await axios.get(`${COLLECTOR_URL}/info`);
         res.json(response.data);
     } catch (error) {
         res.status(500).json({
@@ -218,7 +223,7 @@ app.get('/recolector/info', async(req, res) => {
 
 app.get('/recolector/health', async(req, res) => {
     try{
-        const response = await axios.get('http://localhost:8080/health');
+        const response = await axios.get(`${COLLECTOR_URL}/health`);
         res.json(response.data);
     } catch (error) {
         //res.status(500).send('ERROR al tratar de obtener el estado del recolector')
@@ -234,6 +239,8 @@ app.get('/recolector/health', async(req, res) => {
 
 app.listen(PORT, () => {
     console.log(`API escuchando en http://localhost:${PORT}`);
+    console.log(`Collector URL configurada: ${COLLECTOR_URL}`);
+    console.log(`Base de datos host: ${process.env.DB_HOST || 'localhost'}`);
 
         // Probar conexión a la base de datos
     pool.query('SELECT NOW()', (err, res) => {
