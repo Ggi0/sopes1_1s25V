@@ -17,4 +17,5 @@ COPY . .
 EXPOSE 5173
 
 # Comando para levantar Vite en modo desarrollo
-CMD ["npm", "run", "dev", "--", "--host"]
+# ! Agregar --host 0.0.0.0 para que Vite acepte conexiones externas
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
