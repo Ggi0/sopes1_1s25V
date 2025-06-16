@@ -1,0 +1,20 @@
+# node js como imagen base
+FROM node:22-alpine 
+
+# Directorio de trabajo dentro del contenedor
+WORKDIR /front
+
+# Copiamos los archivos necesarios para instalar dependencias
+COPY package*.json ./
+
+# Instalamos dependencias
+RUN npm install
+
+# Copiamos todo el código fuente
+COPY . .
+
+# Expone el puerto por defecto de Vite (dev server)
+EXPOSE 5173
+
+# Comando para levantar Vite en modo desarrollo
+CMD ["npm", "run", "dev", "--", "--host"]
