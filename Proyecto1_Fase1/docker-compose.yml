@@ -1,5 +1,4 @@
 # version del docker compose
-version: '3.8'
 
 # def de todos los servios utilizados 
 services:
@@ -23,7 +22,7 @@ services:
 
     #volumnes para persistencia de datos e init
     volumes:
-      - postgres_data:/var/lib/postgresql/postgres_data
+      - postgres_data:/var/lib/postgresql/data
       # script de inicializacion de la base de datos
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
 
@@ -53,8 +52,9 @@ services:
       - "8080:8080"
 
     # volumen para los modulos
-    volumes:
-      - /proc:/proc:recolector
+
+#    volumes:
+#     - /proc:/proc:ro
     
     #conectarse a la red
     networks:
