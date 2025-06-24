@@ -23,3 +23,16 @@
 /ram/moduleRAM.mod.o
 /ram/moduleRAM.o
 /ram/modules.order
+
+/procesos/.Module.symvers.cmd
+/procesos/.modulePRO.ko.cmd
+/procesos/.modulePRO.mod.cmd
+/procesos/.modulePRO.mod.o.cmd
+/procesos/.modulePRO.o.cmd
+/procesos/.modules.order.cmd
+/procesos/Module.symvers
+/procesos/modulePRO.mod
+/procesos/modulePRO.mod.c
+/procesos/modulePRO.mod.o
+/procesos/modulePRO.o
+/procesos/modules.order
