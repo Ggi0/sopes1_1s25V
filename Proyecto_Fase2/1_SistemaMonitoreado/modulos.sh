@@ -11,6 +11,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Definir rutas absolutas de CPU y RAM
 CPU_DIR="$SCRIPT_DIR/./Modulos/cpu"
 RAM_DIR="$SCRIPT_DIR/./Modulos/ram"
+PROC_DIR="$SCRIPT_DIR/./Modulos/procesos"
 
 # ========== MÓDULO CPU ==========
 echo ">>> Compilando módulo CPU..."
@@ -28,10 +29,20 @@ make
 echo ">>> Cargando módulo RAM..."
 sudo insmod moduleRAM.ko
 
+# =========== MODULO PROCESOS =============
+echo ">>> Compilando modulo procesos ..."
+cd "$PROC_DIR" || { echo "No se pudo acceder a $PROC_DIR"; exit 1; }
+make
+
+echo ">>> Cargando moudlo Procesos ..."
+sudo insmod modulePRO.ko
+
+
 # ========== VERIFICACIONES ==========
 echo -e "\n>>> Verificando módulos cargados..."
 lsmod | grep moduleCPU
 lsmod | grep moduleRAM
+lsmod | grep modulePRO
 
 
 echo ">>> Módulos compilados y cargados correctamente."
