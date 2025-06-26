@@ -49,12 +49,13 @@ func main() {
 
 	// Configuramos las rutas de los archivos que vamos a leer
 	// En desarrollo: /proc/ram_202100229 y /proc/cpu_202100229
-	// todo: para cuando este en los contenedores --->  /host/proc/ram_202100229 y /host/proc/cpu_202100229
 	ramFilePath := getEnvOrDefault("RAM_FILE_PATH", "/proc/ram_202100229")
 	cpuFilePath := getEnvOrDefault("CPU_FILE_PATH", "/proc/cpu_202100229")
+	procFilePath := getEnvOrDefault("PROC_FILE_PATH", "/proc/procesos_202100229")
 
 	log.Printf(" Archivo RAM: %s", ramFilePath)
 	log.Printf(" Archivo CPU: %s", cpuFilePath)
+	log.Printf(" Archivo PROCESOS: %s", procFilePath)
 
 	// Verificamos que los archivos existan antes de continuar
 	if !fileExists(ramFilePath) {
@@ -63,12 +64,15 @@ func main() {
 	if !fileExists(cpuFilePath) {
 		log.Fatalf(" Error: El archivo de CPU no existe: %s", cpuFilePath)
 	}
+	if !fileExists(procFilePath) {
+		log.Fatalf(" Error: El archivo de PROCESOS no existe: %s", procFilePath)
+	}
 
 	log.Println("---> Archivos de métricas encontrados")
 
 	// Inicializamos el servicio de monitoreo
 	// Este servicio contiene toda la lógica para leer los archivos con goroutines
-	monitorService := services.NewMonitorService(ramFilePath, cpuFilePath)
+	monitorService := services.NewMonitorService(ramFilePath, cpuFilePath, procFilePath)
 
 	// Inicializamos el handler de métricas
 	// El handler maneja las peticiones HTTP y usa el servicio

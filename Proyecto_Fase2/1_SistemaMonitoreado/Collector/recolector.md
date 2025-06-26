@@ -64,3 +64,28 @@ endopoints del recolector:
 ```
 {"service":"recolector-monitoreo","status":"healthy","timestamp":"2025-06-12T17:44:40-06:00","version":"1.0.0"}
 ```
+
+
+
+
+# PROCESOS
+informacion del modulo que se maneja para la lectura
+
+Corriendo: TASK_RUNNING (ejecutándose o listo para ejecutar)
+Durmiendo: TASK_INTERRUPTIBLE + TASK_UNINTERRUPTIBLE (esperando recursos)
+Parados: TASK_STOPPED (detenidos por señales o depurador)
+Zombie: EXIT_ZOMBIE (terminados pero no recolectados por el padre)
+Total: suma de todos los procesos encontrados
+
+```bash
+
+{
+	"corriendo": 3,
+	"total":     331,
+	"durmiendo": 212,
+	"zombie":    0,
+	"parados":   0,
+}
+
+```
+

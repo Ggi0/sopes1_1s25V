@@ -60,5 +60,5 @@ type CPUdata struct {
 	CargaAvg  CargaAvg  `json:"carga_avg"`
 	Frecuenca Frecuenca `json:"frecuencia"`
 	UsoCPU    UsoCPU    `json:"uso"`
-	Procesos  Procesos  `json:"porcesos"`
+	Procesos  Procesos  `json:"procesos"`
 }

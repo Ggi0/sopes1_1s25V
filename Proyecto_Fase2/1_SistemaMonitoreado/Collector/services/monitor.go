@@ -14,18 +14,19 @@ import (
 	"time"
 )
 
-// rutas a los archivos virtuales del sistema de archivos /proc creados por el modulo cpu / ram .ko
+// rutas a los archivos virtuales del sistema de archivos /proc creados por el modulo cpu / ram / procesos .ko
 type MonitorService struct {
-	ramFilePath string
-	cpuFilePath string
+	ramFilePath  string
+	cpuFilePath  string
+	procFilePath string
 }
 
 // cera una nueva instancia del servicio de monitoreo
-func NewMonitorService(ramPath, cpuPath string) *MonitorService {
-	// TODO: cuando este en contenedores, las rutas serán /host/proc/ram_202100229 y /host/proc/cpu_202100229
+func NewMonitorService(ramPath, cpuPath, procPath string) *MonitorService {
 	return &MonitorService{
-		ramFilePath: ramPath,
-		cpuFilePath: cpuPath,
+		ramFilePath:  ramPath,
+		cpuFilePath:  cpuPath,
+		procFilePath: procPath,
 	}
 }
 
@@ -37,9 +38,10 @@ func NewMonitorService(ramPath, cpuPath string) *MonitorService {
 */
 func (ms *MonitorService) GetSystemMetrics() (*models.SystemMetrics, error) {
 	// canales para la comunicacion entre las goroutines
-	ramChannel := make(chan models.RAMdata) // canal para datos de la ram
-	cpuChannel := make(chan models.CPUdata) // canal para los datos de la cpu
-	errorChannel := make(chan error, 2)     // canal para errore s, buffer de 2
+	ramChannel := make(chan models.RAMdata)   // canal para datos de la ram
+	cpuChannel := make(chan models.CPUdata)   // canal para los datos de la cpu
+	procChannel := make(chan models.ProcData) // canal para los datos de los procesos
+	errorChannel := make(chan error, 2)       // canal para errore s, buffer de 2
 
 	// WAITGROUP --> es como un contador que se incrementa cuando lanzamos una gorutine y se decrementa cuando termina
 	// ---> ayuda a esperar que terminen todas las gorutinas
@@ -53,21 +55,27 @@ func (ms *MonitorService) GetSystemMetrics() (*models.SystemMetrics, error) {
 	wg.Add(1)
 	go ms.readCPU(&wg, cpuChannel, errorChannel)
 
+	// inicializar la gorutine para leer informacion de los procesos
+	wg.Add(1)
+	go ms.readPROC(&wg, procChannel, errorChannel)
+
 	// para cerrar los canales cuando terminen las lecturas y no se queden esperando indefinidamente
 	go func() {
 		wg.Wait()           // espera que terminen todas las goroutines
 		close(ramChannel)   // cerrar el canal de ram
 		close(cpuChannel)   // cerrar el canal de cpu
+		close(procChannel)  // cerrar el canal de los procesos
 		close(errorChannel) // cerrar el canal de errores
 	}()
 
 	// variables para recibir datos de los canales
 	var ramRespuesta models.RAMdata
 	var cpuRespuesta models.CPUdata
-	var ramConfirmado, cpuConfirmado bool
+	var procRespuesta models.ProcData
+	var ramConfirmado, cpuConfirmado, procConfirmado bool
 
 	// bucle para recivir datos de los canales
-	for !ramConfirmado || !cpuConfirmado {
+	for !ramConfirmado || !cpuConfirmado || !procConfirmado {
 		select {
 		case data, ok := <-ramChannel:
 			if ok { // si el canal no esta cerrado
@@ -83,9 +91,16 @@ func (ms *MonitorService) GetSystemMetrics() (*models.SystemMetrics, error) {
 				log.Println("Datos de CPU recibidos correctamente")
 			}
 
+		case data, ok := <-procChannel:
+			if ok {
+				procRespuesta = data
+				procConfirmado = true
+				log.Println("Datos de PROCESOS recibidos correctamente")
+			}
+
 		case err := <-errorChannel:
 			// si hay un error se retorna de inmediato
-			log.Println("ERROR al leer los datos: %v", err)
+			log.Printf("ERROR al leer los datos: %v", err)
 			return nil, err
 
 		case <-time.After(10 * time.Second):
@@ -100,15 +115,18 @@ func (ms *MonitorService) GetSystemMetrics() (*models.SystemMetrics, error) {
 		TimeStamp: time.Now().Format(time.RFC3339), // formato iso 8601
 		RAM:       ramRespuesta.RAM,                // informacion de la memoria, solo a de la ram
 		CPU:       cpuRespuesta,                    // info completa del cpu
+		PROC:      procRespuesta,                   // info de los procesos
 		Status:    "success",                       // recoleccion de datos correta
 		Message:   "Lectura de datos correcta",
 	}
 
-	log.Println("Daos del sistema recolectadas exitosamente")
+	log.Println("Datos del sistema recolectadas exitosamente")
 	return metrics, nil
 }
 
 /*
+======================= RAM ====================================
+
 lee el archivo de informacion de ram usando una gorourine
 
 wg  -> waitgroup para sincornizacion
@@ -118,7 +136,7 @@ errorChannel ---> canal para enviar errores
 func (ms *MonitorService) readRAM(wg *sync.WaitGroup, ramChannel chan<- models.RAMdata, errorChannel chan<- error) {
 	defer wg.Done() // al terminar la funcion, decrementamos el contador del waitgroup
 
-	log.Println("Leyendo datos de la RAM desde: %s", ms.ramFilePath)
+	log.Printf("Leyendo datos de la RAM desde: %s", ms.ramFilePath)
 
 	// leer todo el contenido del archivo
 	data, err := ioutil.ReadFile(ms.ramFilePath)
@@ -146,6 +164,8 @@ func (ms *MonitorService) readRAM(wg *sync.WaitGroup, ramChannel chan<- models.R
 }
 
 /*
+======================= CPU ====================================
+
 lee el archivo de información de CPU usando una goroutine
 */
 func (ms *MonitorService) readCPU(wg *sync.WaitGroup, cpuChannel chan<- models.CPUdata, errorChannel chan<- error) {
@@ -176,4 +196,38 @@ func (ms *MonitorService) readCPU(wg *sync.WaitGroup, cpuChannel chan<- models.C
 	log.Printf("Datos del CPU enviados al canal")
 	//log.Printf(" Datos de CPU enviados al canal - Uso: %.2f%%, Frecuencia: %.0f MHz", cpuData.Uso.CPUUsed, cpuData.Frecuencia.ActualMhz)
 
+}
+
+/*
+======================= PROCESOS ==================================
+
+lee el archivo virtual que esta en /proc que tiene informacion de los procesos
+utilizando una goroutine
+*/
+func (ms *MonitorService) readPROC(wg *sync.WaitGroup, procChannel chan<- models.ProcData, errorChannel chan<- error) {
+	defer wg.Done() // al terminar la funcion decrementamos el contador del waitgroup
+
+	log.Printf("Leyendo datos de los PROCESOS desde : %s", ms.procFilePath)
+
+	// leemos el contenido del archivos
+	data, err := ioutil.ReadFile(ms.procFilePath)
+	if err != nil {
+		errorMsg := fmt.Sprintf("Error al leer archivo de PROCESOS %s: %v", ms.procFilePath, err)
+		log.Printf("%s", errorMsg)
+		errorChannel <- fmt.Errorf(errorMsg)
+		return
+	}
+
+	// parseamos el json a nuestra estructura ProcData
+	var procRespuesta models.ProcData
+	if err := json.Unmarshal(data, &procRespuesta); err != nil {
+		errorMsg := fmt.Sprintf("error al parsear a JSON de PROCESOS: %v", err)
+		log.Printf("%s", errorMsg)
+		errorChannel <- fmt.Errorf(errorMsg)
+		return
+	}
+
+	// enviamos los datos por el canal
+	procChannel <- procRespuesta
+	log.Printf("Datos de PROCESOS enviados al canal")
 }
