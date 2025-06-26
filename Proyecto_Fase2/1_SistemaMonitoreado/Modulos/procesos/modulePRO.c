@@ -125,7 +125,7 @@ static int proc_show(struct seq_file *m, void *v) {
     seq_printf(m, "\t\"total\":     %lu,\n", total);
     seq_printf(m, "\t\"durmiendo\": %lu,\n", sleeping);
     seq_printf(m, "\t\"zombie\":    %lu,\n", zombie);
-    seq_printf(m, "\t\"parados\":   %lu,\n", stopped);
+    seq_printf(m, "\t\"parados\":   %lu\n", stopped);
     seq_printf(m, "}\n");
 
     return 0;
