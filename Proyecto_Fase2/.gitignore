@@ -1,2 +1,5 @@
 2_GeneradorTrafico/env
+2_GeneradorTrafico/__pycache__
 
+# archivo que genera el locust con todas las peticiones:
+2_GeneradorTrafico/entrada.json
