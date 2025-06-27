@@ -44,7 +44,13 @@ para ejecutar nuestro archivo:
 # ¿QUÉ ES LOCUST?
 Locust es una herramienta de pruebas de carga escrita en Python que simula usuarios concurrentes realizando peticiones HTTP a una aplicación. Su función principal es generar tráfico artificial para probar el rendimiento de sistemas bajo estrés.
 
+la parte de locust esta dividia en 2 fases
 
+## FASE 1: RECOLECCIÓN DE DATOS (3 minutos)
+Estresar tu backend de Go (Collector) y recopilar métricas reales del sistema.
+
+por 3 minutos se  hara perticioens recurrentes con un intervalo de 1 a 2 seg.
+retornara un json.
 el json generado por la entrada de trafico tendra esta estructura:
 
 ```json
@@ -108,3 +114,11 @@ donde data es:
 	}
 
 ```
+
+
+## FASE 2: REPRODUCCIÓN DE TRÁFICO
+Usar los datos recopilados para probar el sistema de procesamiento.
+
+configurar 150 usuarios y enviar Post al INGRESS, agregar un usuario cada segundo.
+
+Los usuarios de Locust toman estos JSONs del array y los envían uno por uno como cuerpo de peticiones POST al sistema Kubernetes.
