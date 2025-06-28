@@ -45,4 +45,6 @@ class UsuarioVirtual(HttpUser):
     wait_time = between(1, 4)
 
     # TODO: queda pendiente, debe ser configurado segun donde este desplegado el INGREESS
+    #  debe apuntar a la IP pública del Load Balancer que GCP crea
+    # La IP se obtiene después de desplegar el Ingress
     # host = ...
