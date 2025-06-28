@@ -3,3 +3,7 @@
 
 # archivo que genera el locust con todas las peticiones:
 2_GeneradorTrafico/entrada.json
+
+
+# modulos de la parte 3 del proyecto (APIS)
+3_ProcesamientoYVisualizacion/api2_njs/node_modules
