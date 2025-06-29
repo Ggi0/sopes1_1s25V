@@ -8,3 +8,12 @@
 # modulos de la parte 3 del proyecto (APIS)
 3_ProcesamientoYVisualizacion/api2_njs/node_modules
 3_ProcesamientoYVisualizacion/api2_njs/.env
+
+
+# entorno virtual de la api1
+3_ProcesamientoYVisualizacion/api1_py/env
+3_ProcesamientoYVisualizacion/api1_py/__pycache__
+3_ProcesamientoYVisualizacion/api1_py/controllers/__pycache__
+3_ProcesamientoYVisualizacion/api1_py/routes/__pycache__
+3_ProcesamientoYVisualizacion/api1_py/services/__pycache__
+3_ProcesamientoYVisualizacion/api1_py/.env
