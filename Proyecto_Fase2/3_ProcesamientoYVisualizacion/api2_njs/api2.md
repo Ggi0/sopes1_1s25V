@@ -23,6 +23,11 @@ instalar axios:
 instalar cors middleware
 `npm install cors`
 
+instalar dotenv para trabajar con variables de entorno
+`npm install dotenv`
+
+isntalar mysql2
+`npm install mysql2`
 
 
 
