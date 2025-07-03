@@ -127,13 +127,13 @@ static int cpu_show(struct seq_file *m, void *v)
     load_avg15 = LOAD_INT(avenrun[2]) * 100 + LOAD_FRAC(avenrun[2]);
 
     // * --> frecuencia del cpu
-    #ifdef CONFIG_CPU_FREQ
-    struct cpufreq_policy *policy = cpufreq_cpu_get(0);  // Obtiene política de frecuencia del CPU 0
-    if (policy) {
-        cpu_freq = policy->cur;  // Frecuencia actual en KHz
-        cpufreq_cpu_put(policy); // Libera la referencia
-    }
-    #endif
+    //#ifdef CONFIG_CPU_FREQ
+    //struct cpufreq_policy *policy = cpufreq_cpu_get(0);  // Obtiene política de frecuencia del CPU 0
+    //if (policy) {
+    //    cpu_freq = policy->cur;  // Frecuencia actual en KHz
+    //    cpufreq_cpu_put(policy); // Libera la referencia
+    //}
+    //#endif
 
     /*
      * --> CÁLCULO DE CPU EN USO Y LIBRE
@@ -173,8 +173,8 @@ static int cpu_show(struct seq_file *m, void *v)
     
     // Frecuencia actual del CPU (varía con la carga)
     seq_printf(m, "\t\"frecuencia\": {\n");
-    if (cpu_freq > 0) {
-        seq_printf(m, "\t\t\"actual_mhz\": %u.%03u\n", cpu_freq / 1000, cpu_freq % 1000);
+    if (cpu_freq >= 0) {
+        seq_printf(m, "\t\t\"actual_mhz\": %u.%03u\n", cpu_freq / 1000, cpu_freq);
     } else {
         seq_printf(m, "\t\t\"actual_mhz\": \"indisponible\"\n");
     }
