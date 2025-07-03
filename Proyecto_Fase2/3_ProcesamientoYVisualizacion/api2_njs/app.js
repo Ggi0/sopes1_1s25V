@@ -34,6 +34,8 @@ app.use(express.json({ limit: '10mb' }));
 // Middleware para logging de peticiones
 app.use((req, res, next) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+    console.log('Headers:', req.headers);
+    console.log('Body:', req.body);
     next();
 });
 
@@ -52,8 +54,24 @@ app.get('/health', (req, res) => {
     });
 });
 
+// REGISTAR RUTAS DE MÉTRICAS
+console.log('Registrando rutas con prefijo /api');
 // Usar las rutas de métricas
 app.use('/api', routes);
+
+// DEBUGGING: Ruta de prueba directa
+app.post('/api/metrics', (req, res) => {
+    console.log('RUTA DIRECTA /api/metrics EJECUTADA');
+    console.log('Body recibido:', req.body);
+    
+    res.status(200).json({
+        success: true,
+        message: 'Ruta directa funcionando',
+        api: 'NodeJS',
+        timestamp: new Date().toISOString(),
+        data_received: req.body
+    });
+});
 
 // Ruta por defecto
 app.get('/', (req, res) => {
@@ -61,20 +79,33 @@ app.get('/', (req, res) => {
         message: 'API NodeJS - Sistema de Métricas',
         status: 'activo',
         api: 'NodeJS',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        available_routes: [
+            'GET /',
+            'GET /health', 
+            'POST /api/metrics',
+            'GET /api/health',
+            'GET /api/test'
+        ]
     });
 });
 
 // =======================================================================
 //                      MANEJO DE ERRORES GLOBALES
 // =======================================================================
-
 // middlware para manejar rutas no encontradas
-app.use((req,res) => {
+app.use((req, res) => {
+    console.log(`RUTA NO ENCONTRADA: ${req.method} ${req.originalUrl}`);
     res.status(404).json({
         error: 'Ruta no encontrada',
         message: `La ruta ${req.originalUrl} no existe`,
-        api: 'NodeJS'
+        api: 'NodeJS',
+        method: req.method,
+        available_routes: [
+            'GET /',
+            'GET /health', 
+            'POST /api/metrics'
+        ]
     });
 });
 
@@ -94,16 +125,14 @@ app.use((error, req, res, next) => {
 // =======================================================================
 async function startServer(){
     try{
-        // probar la conexion a la base de datos antes de empezar el servidor
-        //await database.testConnection();
-        console.log('Conexion a MySQL aun no configurada');
+        await database.testConnection();
+        console.log('Conexion a MySQL establecida');
 
-
-        // inicial el servidor
-        app.listen(PORT, () => {
-            console.log(`API NodeJS iniciada en puerto ${PORT}`)
+        app.listen(PORT, '0.0.0.0', () => {
+            console.log(`API NodeJS iniciada en puerto ${PORT}`);
             console.log(`Entorno: ${process.env.NODE_ENV || 'development'}`);
             console.log(`Base de datos: ${process.env.DB_HOST || 'localhost'}`);
+            
         });
         
     }catch (error) {
@@ -111,6 +140,7 @@ async function startServer(){
         process.exit(1);
     }
 }
+
 
 
 /*

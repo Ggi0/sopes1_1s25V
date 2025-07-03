@@ -30,4 +30,8 @@ isntalar mysql2
 `npm install mysql2`
 
 
+para la tercera api:
+`npm install express socket.io`
+
+
 
