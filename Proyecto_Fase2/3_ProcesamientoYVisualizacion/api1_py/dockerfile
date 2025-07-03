@@ -1,0 +1,34 @@
+# 1. Base: usa una imagen oficial de Python ligera
+FROM python:3.11-slim AS base
+
+# 2. Variables de entorno para evitar buffers en logs y definir carpeta de trabajo
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# 3. Instala dependencias del sistema necesarias para MySQL
+#    (en slim, se requiere instalar gcc y headers)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    default-libmysqlclient-dev \
+  && rm -rf /var/lib/apt/lists/*
+
+# 4. Copia únicamente el código fuente al contenedor
+#    Excluye archivos no deseados con .dockerignore (.env, __pycache__, env/)
+COPY . .
+
+# 5. Instala los paquetes directamente con pip
+#    `--no-cache-dir` evita almacenar la cache en el contenedor
+RUN pip install --no-cache-dir \
+    Flask \
+    python-dotenv \
+    mysql-connector-python \
+    flask-cors
+
+# 6. Expone el puerto (predeterminado configurable con $PORT)
+EXPOSE 3000
+
+# 7. Comando por defecto para iniciar la API
+#    Usamos la entrada de Flask desde app.py
+CMD ["flask", "--app", "app", "run", "--host=0.0.0.0", "--port=5000"]
