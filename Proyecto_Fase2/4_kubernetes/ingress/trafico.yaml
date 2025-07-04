@@ -1,0 +1,126 @@
+# =========================================================================
+# INGRESS PRINCIPAL - Maneja el tráfico base hacia Python API
+# =========================================================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: main-ingress
+  namespace: so1-fase2
+  labels:
+    app: metrics-api-main
+  annotations:
+    # USAR: "nginx" para usar NGINX Ingress Controller
+    kubernetes.io/ingress.class: "nginx"
+    
+    # Configuraciones de CORS para permitir peticiones desde Locust
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
+    
+    # Habilitar CORS
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    
+    # Timeouts para manejar carga pesada
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+
+spec:
+  rules:
+  - http:
+      paths:
+      # =================================================================
+      # RUTA PRINCIPAL donde Locust envía las peticiones
+      # Esta ruta recibe el tráfico BASE y lo envía a Python API
+      # NGINX dividirá automáticamente el tráfico con el Ingress canary
+      # =================================================================
+      - path: /api/metrics
+        pathType: Exact
+        backend:
+          service:
+            name: python-api-service
+            port:
+              number: 80
+      
+      # =================================================================
+      # RUTAS DE HEALTH CHECK para monitoreo
+      # =================================================================
+      - path: /health
+        pathType: Exact
+        backend:
+          service:
+            name: python-api-service
+            port:
+              number: 80
+      
+      # =================================================================
+      # RUTA DE FALLBACK - maneja cualquier otra petición
+      # =================================================================
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: python-api-service
+            port:
+              number: 80
+
+---
+# =========================================================================
+# INGRESS CANARY - Intercepta el 50% del tráfico hacia NodeJS API
+# =========================================================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: canary-ingress
+  namespace: so1-fase2
+  labels:
+    app: metrics-api-canary
+  annotations:
+    # USAR: Usar NGINX Ingress Controller (mismo que el principal)
+    kubernetes.io/ingress.class: "nginx"
+    
+    # TRAFFIC SPLIT: Estas anotaciones hacen la división real
+    # ================================================================
+    # CANARY: Indica que este Ingress es un "canary" del principal
+    # Esto significa que interceptará parte del tráfico destinado al main-ingress
+    nginx.ingress.kubernetes.io/canary: "true"
+    
+    # WEIGHT: 50% del tráfico será interceptado y enviado a NodeJS API
+    # El otro 50% seguirá yendo al main-ingress (Python API)
+    nginx.ingress.kubernetes.io/canary-weight: "50"
+    # ================================================================
+    
+    # Mismas configuraciones de CORS que el principal
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+
+spec:
+  rules:
+  - http:
+      paths:
+      # =================================================================
+      # MISMA RUTA que el Ingress principal (/api/metrics)
+      # ¡ESTO ES CLAVE! Debe ser exactamente la misma ruta para que funcione
+      # el traffic split. NGINX interceptará 50% de las peticiones a esta ruta
+      # y las enviará a nodejs-api-service en lugar de python-api-service
+      # =================================================================
+      - path: /api/metrics
+        pathType: Exact
+        backend:
+          service:
+            name: nodejs-api-service
+            port:
+              number: 80
+      
+      # =================================================================
+      # Health check también para NodeJS (canary)
+      # =================================================================
+      - path: /health
+        pathType: Exact
+        backend:
+          service:
+            name: nodejs-api-service
+            port:
+              number: 80
