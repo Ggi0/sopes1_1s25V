@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: database-config
+  namespace: so1-fase2
+data:
+  # CAMBIAR por la IP REAL de tu instancia Cloud SQL
+  DB_HOST: "34.173.215.6"  # "34.123.45.67"
+  DB_PORT: "3306"
+  DB_NAME: "sp1db"
+  
+  # Configuración adicional
+  DB_CHARSET: "utf8mb4"
+  DB_COLLATION: "utf8mb4_unicode_ci"
+  
+  # Configuración de conexión
+  DB_MAX_CONNECTIONS: "10"
+  DB_TIMEOUT: "30"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: so1-fase2
+data:
+  # Configuración de las aplicaciones
+  FLASK_ENV: "production"
+  NODE_ENV: "production"
+  
+  # Configuración del namespace
+  K8S_NAMESPACE: "so1-fase2"
