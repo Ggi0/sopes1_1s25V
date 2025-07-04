@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: so1-fase2
+  labels:
+    name: so1-fase2
+    environment: production
+    project: sope1-fase2
