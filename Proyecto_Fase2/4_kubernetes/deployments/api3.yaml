@@ -1,0 +1,102 @@
+# =========================================================================
+# DEPLOYMENT PARA API3 - SOCKET.IO + MÉTRICAS EN TIEMPO REAL
+# =========================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api3-nodejs
+  namespace: so1-fase2
+  labels:
+    app: api3-nodejs
+    tier: backend
+    language: nodejs
+    component: realtime-metrics
+spec:
+  replicas: 2 # 2 réplicas para alta disponibilidad
+  selector:
+    matchLabels:
+      app: api3-nodejs
+  template:
+    metadata:
+      labels:
+        app: api3-nodejs
+        tier: backend
+        language: nodejs
+        component: realtime-metrics
+    spec:
+      containers:
+      - name: api3-nodejs
+        image: gio210/api3-nodejs:v2
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3001 # Puerto donde Node.js + Socket.IO escucha
+          name: http
+          protocol: TCP
+        
+        # Variables de entorno desde ConfigMaps
+        env:
+        - name: PORT
+          value: "3001"
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: NODE_ENV
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: database-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: database-config
+              key: DB_PORT
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: database-config
+              key: DB_NAME
+        
+        # Variables sensibles desde Secrets
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: database-secret
+              key: DB_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: database-secret
+              key: DB_PASSWORD
+        
+        # Health checks adaptados para Socket.IO
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3001
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3001
+          initialDelaySeconds: 10
+          periodSeconds: 20
+          timeoutSeconds: 3
+          failureThreshold: 3
+        
+        # Recursos optimizados para Socket.IO (requiere más memoria)
+        resources:
+          requests:
+            memory: "256Mi"  # Más memoria por Socket.IO
+            cpu: "150m"
+          limits:
+            memory: "512Mi"  # Límite más alto
+            cpu: "300m"
+      
+      # Estrategia de restart
+      restartPolicy: Always
