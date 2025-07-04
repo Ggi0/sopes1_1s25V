@@ -17,3 +17,16 @@
 3_ProcesamientoYVisualizacion/api1_py/routes/__pycache__
 3_ProcesamientoYVisualizacion/api1_py/services/__pycache__
 3_ProcesamientoYVisualizacion/api1_py/.env
+
+
+# entorno para la api3
+3_ProcesamientoYVisualizacion/api3_njs/node_modules
+3_ProcesamientoYVisualizacion/api3_njs/.env
+
+#para el frontend
+5_frontend/node_modules
+
+# para kubernetes
+4_kubernetes/secrets
+4_kubernetes/ingress/ingress-rbac-binding.yaml
+4_kubernetes/ingress/ingress-rbac-role.yaml
