@@ -1,0 +1,27 @@
+# =========================================================================
+# SERVICE PARA API3 - EXPONER SOCKET.IO AL EXTERIOR
+# =========================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: api3-nodejs-service
+  namespace: so1-fase2
+  labels:
+    app: api3-nodejs
+    service: api3-realtime
+spec:
+  # IMPORTANTE: LoadBalancer para exponer al exterior (Cloud Run)
+  type: LoadBalancer
+  ports:
+  - port: 80          # Puerto externo
+    targetPort: 3001  # Puerto del contenedor
+    protocol: TCP
+    name: http
+  selector:
+    app: api3-nodejs
+  
+  # Configuración para Socket.IO
+  sessionAffinity: ClientIP  # Importante para WebSockets
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800  # 3 horas
