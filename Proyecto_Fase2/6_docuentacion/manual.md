@@ -3,8 +3,6 @@
 ### *Giovanni Saul Concoha Cax - 202100229*
 
 ---
-Te ayudo a estructurar tu proyecto de manera clara y detallada. Vamos parte por parte:
-
 ## **PARTE 1: MÁQUINA VIRTUAL CON BACKEND COLLECTOR (GCP)**
 
 ### Función Principal:
@@ -26,7 +24,7 @@ El backend de Go lee constantemente los archivos en `/proc` (que es donde Linux 
 ![Arquitectura general](./images/diagrama.png)
 ---
 
-## **PARTE 2: GENERADOR DE TRÁFICO LOCAL (TU MÁQUINA)**
+## **PARTE 2: GENERADOR DE TRÁFICO LOCAL**
 
 ### Función Principal:
 Simular usuarios reales haciendo peticiones al sistema para generar carga y recopilar datos de rendimiento.
@@ -121,7 +119,6 @@ Un Pod es la unidad mínima de despliegue en Kubernetes. Contiene uno o más con
 
 
 ## kubernetes
-Claro, Giovanni. Aquí tienes una documentación completa y estructurada sobre Kubernetes en formato Markdown, ideal para incluir en un repositorio técnico o como guía de referencia personal:
 
 ---
 
